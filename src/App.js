@@ -1,27 +1,50 @@
-import { Container, CssBaseline } from "@mui/material";
-import React from "react";
+import { Container } from "@mui/material";
+import React, { useEffect, useState } from "react";
 import DataTable from "./components/DataTable";
-import { Header } from "./components/global/Header";
-import { AppProvider } from "./context/AppContext";
-import { theme } from "./global/theme";
-import { ThemeProvider } from "@mui/material/styles";
-import { MetaTags } from "react-meta-tags";
+import { Header } from "./components/Header";
+import { getServiceBodies, getMeetings } from "./api";
+const axios = require("axios");
+const jsonpAdapter = require("axios-jsonp");
 
 function App() {
-  return (
-    <ThemeProvider theme={theme}>
-      <AppProvider>
-        <CssBaseline />
+  const [meetings, setMeetings] = useState([]);
+  const [serviceBodies, setServiceBodies] = useState([]);
+  useEffect(() => {
+    axios({
+      url: getServiceBodies,
+      adapter: jsonpAdapter,
+    })
+      .then((res) => {
+        setServiceBodies(res.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    axios({
+      url: getMeetings,
+      adapter: jsonpAdapter,
+    })
+      .then((res) => {
+        setMeetings(res.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
+  if (!meetings.length) {
+    return null;
+  } else {
+    return (
+      <div className="main">
         <Header />
         <Container maxWidth="lg">
-          <MetaTags>
-            <title>BMLT Meeting Tally</title>
-          </MetaTags>
-          <DataTable />
+          <h2>Total Meetings in Connecticut: {meetings.length}</h2>
+
+          <DataTable meetings={meetings} serviceBodies={serviceBodies} />
         </Container>
-      </AppProvider>
-    </ThemeProvider>
-  );
+      </div>
+    );
+  }
 }
 
 export default App;

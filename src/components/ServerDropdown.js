@@ -4,6 +4,7 @@ import { AppContext } from "../context/AppContext";
 
 export const ServerDropdown = ({ serverList, appChange }) => {
   const { server } = useContext(AppContext);
+  console.log("list", serverList);
   return (
     <FormControl sx={{ backgroundColor: "#fff" }} variant="filled">
       <InputLabel id="demo-simple-select-label">Select Server</InputLabel>

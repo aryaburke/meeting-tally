@@ -1,4 +1,4 @@
-import React, { Fragment, useContext, useEffect, useState } from "react";
+import * as React from "react";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
@@ -13,68 +13,8 @@ import Paper from "@mui/material/Paper";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import GroupsIcon from "@mui/icons-material/Groups";
-import { AppContext } from "../context/AppContext";
-import axios from "axios";
-import { getMeetings, getServiceBodies } from "../api";
-import { PropagateLoader } from "react-spinners";
-import { MetaTags } from "react-meta-tags";
-const jsonpAdapter = require("axios-jsonp");
 
-export default function DataTable() {
-  const { server, serverData } = useContext(AppContext);
-  const [meetings, setMeetings] = useState([]);
-  const [serviceBodies, setServiceBodies] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    const getData = async () => {
-      setIsLoading(true);
-      await axios({
-        url: server + getServiceBodies,
-        adapter: jsonpAdapter,
-      })
-        .then((res) => {
-          console.log("service bodies", res.data);
-          // sort by name
-          const sorted = res.data.sort((a, b) => {
-            if (a.name < b.name) {
-              return -1;
-            }
-            if (a.name > b.name) {
-              return 1;
-            }
-            return 0;
-          });
-          setServiceBodies(sorted);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-      await axios({
-        url: server + getMeetings,
-        adapter: jsonpAdapter,
-      })
-        .then((res) => {
-          console.log("meetings", res.data);
-          setMeetings(res.data);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-      setIsLoading(false);
-    };
-    if (server) {
-      getData();
-    }
-  }, [server]);
-
-  const spinnerStyles = {
-    top: "25%",
-    left: "50%",
-    position: "absolute",
-    transform: "translate(-50%, -50%)",
-  };
-
+export default function DataTable({ meetings, serviceBodies }) {
   const rows = [];
   serviceBodies.forEach((body) => {
     meetings.forEach((meeting) => {
@@ -116,10 +56,9 @@ export default function DataTable() {
   ];
 
   function Row({ row }) {
-    const [open, setOpen] = useState(false);
-
+    const [open, setOpen] = React.useState(false);
     return (
-      <Fragment>
+      <React.Fragment>
         {/* {serviceBodies.map((body) => ( */}
         <TableRow>
           <TableCell>
@@ -344,134 +283,113 @@ export default function DataTable() {
             </Collapse>
           </TableCell>
         </TableRow>
-      </Fragment>
+      </React.Fragment>
     );
   }
 
-  console.log("loading", isLoading);
-  console.log("serverData", serverData);
-  if (isLoading) {
-    return <PropagateLoader cssOverride={spinnerStyles} />;
-  }
-  if (Object.keys(serverData).length === 0) {
-    return (
-      <Typography variant="h2" sx={{ margin: "1rem 0" }}>
-        Please Select A Server
-      </Typography>
-    );
-  } else {
-    return (
-      <>
-        <MetaTags>
-          <title>{`${serverData.name} Meeting Tally`}</title>
-        </MetaTags>
-        <Typography variant="h2" sx={{ margin: "1rem 0" }}>
-          {`Meetings In ${serverData.name}`}
-        </Typography>
-        <TableContainer
-          component={Paper}
-          sx={{
-            boxShadow: "0px 0px 10px rgba(0, 0, 0, 0.1)",
-            borderRadius: "10px",
-            marginTop: "2rem",
-            marginBottom: "2rem",
-          }}
-        >
-          <Table aria-label="collapsible table">
-            <TableHead>
-              <TableRow>
-                <TableCell />
-                <TableCell>Area</TableCell>
-                <TableCell align="center">Published</TableCell>
-                <TableCell align="center">Unpublished</TableCell>
-                <TableCell align="center">
-                  In Person
-                  <br />
-                  (Published)
-                </TableCell>
-                <TableCell align="center">
-                  Hybrid
-                  <br />
-                  (Published)
-                </TableCell>
-                <TableCell align="center">
-                  Virtual
-                  <br />
-                  (Published)
-                </TableCell>
-                <TableCell align="center" style={{ fontWeight: 600 }}>
-                  Total
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {serviceBodies
-                .filter((b) => b.id !== "1")
-                .map((body) => (
-                  <Row key={body.id} row={body} />
-                ))}
-              <TableRow style={{ backgroundColor: "#282c34" }}>
-                <TableCell>
-                  <IconButton aria-label="expand row" size="small">
-                    <GroupsIcon style={{ color: "#fff" }} />
-                  </IconButton>
-                </TableCell>
-                <TableCell style={{ fontWeight: 600, color: "#fff" }}>
-                  {serverData.name}
-                </TableCell>
-                <TableCell
-                  align="center"
-                  style={{ fontWeight: 600, color: "#fff" }}
-                >
-                  {rows.filter((pub) => pub.published === "1").length}
-                </TableCell>
-                <TableCell
-                  align="center"
-                  style={{ fontWeight: 600, color: "#fff" }}
-                >
-                  {rows.filter((pub) => pub.published === "0").length}
-                </TableCell>
-                <TableCell
-                  align="center"
-                  style={{ fontWeight: 600, color: "#fff" }}
-                >
-                  {
-                    rows.filter(
-                      (pub) => pub.published === "1" && pub.venue_type === "1"
-                    ).length
-                  }
-                </TableCell>
-                <TableCell
-                  align="center"
-                  style={{ fontWeight: 600, color: "#fff" }}
-                >
-                  {
-                    rows.filter(
-                      (pub) => pub.published === "1" && pub.venue_type === "3"
-                    ).length
-                  }
-                </TableCell>
-                <TableCell
-                  align="center"
-                  style={{ fontWeight: 600, color: "#fff" }}
-                >
-                  {
-                    rows.filter(
-                      (pub) => pub.published === "1" && pub.venue_type === "2"
-                    ).length
-                  }
-                </TableCell>
-                <TableCell
-                  align="center"
-                  style={{ fontWeight: 600, color: "#fff" }}
-                >
-                  {rows.length}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </>
-    );
-  }
+  return (
+    <TableContainer
+      component={Paper}
+      sx={{
+        boxShadow: "0px 0px 10px rgba(0, 0, 0, 0.1)",
+        borderRadius: "10px",
+        marginTop: "2rem",
+        marginBottom: "2rem",
+      }}
+    >
+      <Table aria-label="collapsible table">
+        <TableHead>
+          <TableRow>
+            <TableCell />
+            <TableCell>Area</TableCell>
+            <TableCell align="center">Published</TableCell>
+            <TableCell align="center">Unpublished</TableCell>
+            <TableCell align="center">
+              In Person
+              <br />
+              (Published)
+            </TableCell>
+            <TableCell align="center">
+              Hybrid
+              <br />
+              (Published)
+            </TableCell>
+            <TableCell align="center">
+              Virtual
+              <br />
+              (Published)
+            </TableCell>
+            <TableCell align="center" style={{ fontWeight: 600 }}>
+              Total
+            </TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {serviceBodies
+            .filter((b) => b.id !== "1")
+            .map((body) => (
+              <Row key={body.id} row={body} />
+            ))}
+          <TableRow style={{ backgroundColor: "#282c34" }}>
+            <TableCell>
+              <IconButton aria-label="expand row" size="small">
+                <GroupsIcon style={{ color: "#fff" }} />
+              </IconButton>
+            </TableCell>
+            <TableCell style={{ fontWeight: 600, color: "#fff" }}>
+              Connecticut Region
+            </TableCell>
+            <TableCell
+              align="center"
+              style={{ fontWeight: 600, color: "#fff" }}
+            >
+              {rows.filter((pub) => pub.published === "1").length}
+            </TableCell>
+            <TableCell
+              align="center"
+              style={{ fontWeight: 600, color: "#fff" }}
+            >
+              {rows.filter((pub) => pub.published === "0").length}
+            </TableCell>
+            <TableCell
+              align="center"
+              style={{ fontWeight: 600, color: "#fff" }}
+            >
+              {
+                rows.filter(
+                  (pub) => pub.published === "1" && pub.venue_type === "1"
+                ).length
+              }
+            </TableCell>
+            <TableCell
+              align="center"
+              style={{ fontWeight: 600, color: "#fff" }}
+            >
+              {
+                rows.filter(
+                  (pub) => pub.published === "1" && pub.venue_type === "3"
+                ).length
+              }
+            </TableCell>
+            <TableCell
+              align="center"
+              style={{ fontWeight: 600, color: "#fff" }}
+            >
+              {
+                rows.filter(
+                  (pub) => pub.published === "1" && pub.venue_type === "2"
+                ).length
+              }
+            </TableCell>
+            <TableCell
+              align="center"
+              style={{ fontWeight: 600, color: "#fff" }}
+            >
+              {rows.length}
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
 }
